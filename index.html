@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einkaufsliste</title>
+
+<style>
+body {
+    font-family: sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+}
+
+textarea {
+    width: 90%;
+    height: 150px;
+    margin: 10px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+button {
+    margin: 10px;
+    padding: 12px;
+    font-size: 16px;
+}
+
+h2 {
+    margin: 10px;
+}
+
+.item {
+    background: white;
+    margin: 5px 10px;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 18px;
+}
+
+.bought {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+
+<textarea id="input" placeholder="Liste hier einfügen..."></textarea><br>
+<button onclick="createList()">Liste erstellen</button>
+<button onclick="resetAll()">Reset</button>
+
+<div id="list"></div>
+
+<script>
+const categories = {
+
+    "🥦 Obst & Gemüse": [
+        "Obst","Apfel","Banane","Orange","Mandarine","Trauben","Erdbeeren","Blaubeeren","Himbeeren",
+        "Zitrone","Limette","Kiwi","Mango","Ananas","Birne","Pfirsich","Nektarine",
+        "Gemüse","Paprika","Tomaten","Gurke","Zucchini","Aubergine","Karotten","Möhren",
+        "Brokkoli","Blumenkohl","Spinat","Salat","Rucola","Feldsalat",
+        "Zwiebeln","Knoblauch","Frühlingszwiebeln","Lauch","Porree",
+        "Kartoffeln","Süßkartoffeln","Champignons","Pilze","Avocado","Maiskolben"
+    ],
+
+    "🧂 Gewürze, Öle & Saucen": [
+        "Salz","Pfeffer","Paprikapulver","Chili","Curry","Oregano","Basilikum",
+        "Gewürzmischung",
+        "Öl","Olivenöl","Sonnenblumenöl","Rapsöl",
+        "Essig","Balsamico",
+        "Sojasauce","Ketchup","Mayonnaise","Senf",
+        "BBQ Sauce","Tomatensauce","Pesto"
+    ],
+
+    "🍬 Süßigkeiten & Snacks": [
+        "Schokolade","Gummibärchen","Chips","Salzstangen","Nüsse","Studentenfutter",
+        "Kekse","Butterkekse","Kuchen","Brownies","Muffins","Donuts",
+        "Eiswaffeln","Pudding","Dessert",
+        "Milchreis","Grießpudding","Proteinriegel","Snackriegel"
+    ],
+
+    "🥫 Konserven & Haltbares": [
+        "Kichererbsen","Linsen","Bohnen","Kidneybohnen","Weiße Bohnen",
+        "Mais","Erbsen","Möhren (Dose)",
+        "Tomatenmark","passierte Tomaten","stückige Tomaten","Dosentomaten","getrocknete Tomaten",
+        "Kokosmilch","Suppen","Fertigsuppen",
+        "Thunfisch","Sardinen",
+        "Brühe","Gemüsebrühe","Hühnerbrühe",
+        "Fertiggerichte","Eintopf","Ravioli",
+        "rote Bete", "rote Beete"
+    ],
+
+    "🍝 Teigwaren & Reis": [
+        "Nudeln","Spaghetti","Penne","Fusilli","Tagliatelle","Lasagneplatten",
+        "Reis","Basmati Reis","Jasminreis","Risotto Reis",
+        "Couscous","Bulgur","Quinoa",
+        "Instantnudeln","Ramen"
+    ],
+
+    "🥚 Backzutaten & Grundstoffe": [
+        "Mehl","Zucker","Brauner Zucker","Puderzucker","Backpulver","Natron",
+        "Hefe","Trockenhefe","Vanillezucker","Kakao",
+        "Eier","Ei","Butter","Margarine",
+        "Speisestärke","Haferflocken","Mandeln","Haselnüsse",
+        "Schokostreusel","Backschokolade"
+    ],
+
+    "🧀 Kühlregal": [
+        "Milch","H-Milch","Frischmilch","Hafermilch","Sojamilch","Mandelmilch",
+        "Joghurt","Naturjoghurt","Fruchtjoghurt","Griechischer Joghurt",
+        "Quark","Skyr","Frischkäse",
+        "Käse","Gouda","Emmentaler","Cheddar","Mozzarella","Feta","Streukäse",
+        "Schmelzkäse",
+        "Sahne","Schlagsahne","Kochsahne",
+        "Butter","Margarine",
+        "Aufschnitt","Wurst","Schinken","Salami",
+        "Fleisch","Hackfleisch","Hähnchen","Rindfleisch",
+        "Fisch","Lachs","Forelle",
+        "Tofu","Vegane Produkte"
+    ],
+
+    "🥖 Backwaren": [
+        "Brot","Brötchen","Toast","Vollkornbrot","Baguette","Ciabatta",
+        "Croissant","Laugenstange","Laugenbrezel","Rosinenbrötchen",
+        "Kuchen","Torte","Teilchen"
+    ],
+
+    "🥣 Frühstück & Cerealien": [
+        "Müsli","Knuspermüsli","Cornflakes","Haferflocken",
+        "Frühstückscerealien","Schokomüsli",
+        "Marmelade","Honig","Nutella","Nuss-Nougat-Creme",
+        "Erdnussbutter","Aufstrich","Fruchtaufstrich",
+        "Kaffeepads","Kaffeebohnen","Kaffeepulver","Tee","Kakao"
+    ],
+
+    "❄️ Gefrierregal": [
+        "Tiefkühlpizza","Pizza","Pommes","Kroketten",
+        "Tiefkühlgemüse","TK-Brokkoli","TK-Erbsen","TK-Spinat",
+        "Tiefkühlobst","Beerenmix",
+        "Eis","Speiseeis",
+        "Fertiggerichte","Lasagne","Chicken Nuggets","Fischstäbchen",
+        "Apfelstrudel","Eis","Vanilleeis","Schokoeis",
+    ],
+
+    "🥤 Getränke": [
+        "Wasser","Mineralwasser","Stilles Wasser","Sprudel",
+        "Saft","Orangensaft","Apfelsaft","Multivitaminsaft",
+        "Limonade","Cola","Fanta","Sprite",
+        "Eistee","Energy Drink",
+        "Bier","Wein","Sekt",
+        "Milchgetränke","Kakao"
+    ],
+
+    "🧼 Haushalt & Hygiene": [
+        "Toilettenpapier","Klopapier","Küchenrolle","Taschentücher",
+        "Feuchttücher","Babyfeuchttücher","Windeln","Feuchtes Toilettenpapier",
+        "Müllsäcke","Müllbeutel","Gelbe Säcke","Frischhaltefolie","Alufolie",
+        "Backpapier","Gefrierbeutel",
+        "Spülmittel","Spülmaschinentabs","Geschirrreiniger",
+        "Allzweckreiniger","Badreiniger","Glasreiniger","WC-Reiniger",
+        "Desinfektionsmittel","Putzmittel",
+        "Waschmittel","Weichspüler","Fleckentferner",
+        "Seife","Handseife","Duschgel","Shampoo","Conditioner",
+        "Zahnpasta","Zahnbürste","Mundspülung",
+        "Deo","Rasierer","Rasierschaum",
+        "Hygieneartikel","Tampons","Binden","Slipeinlagen"
+    ]
+
+};
+
+let state = JSON.parse(localStorage.getItem("state")) || {};
+let currentList = JSON.parse(localStorage.getItem("currentList")) || [];
+
+function createList() {
+    const raw = document.getElementById("input").value;
+
+    currentList = raw
+        .split("\n")
+        .map(i => i.trim())
+        .filter(i => i && !i.startsWith("*"));
+
+    state = {};
+    save();
+    render();
+}
+
+function save() {
+    localStorage.setItem("state", JSON.stringify(state));
+    localStorage.setItem("currentList", JSON.stringify(currentList));
+}
+
+function render() {
+    const container = document.getElementById("list");
+    container.innerHTML = "";
+
+    let bought = [];
+
+    for (let cat in categories) {
+        const items = currentList.filter(i => categories[cat].includes(i));
+
+        if (!items.length) continue;
+
+        const div = document.createElement("div");
+        const title = document.createElement("h2");
+        title.textContent = cat;
+        div.appendChild(title);
+
+        items.forEach(item => {
+            if (state[item]) {
+                bought.push(item);
+                return;
+            }
+
+            div.appendChild(createItem(item));
+        });
+
+        container.appendChild(div);
+    }
+
+    // Rest (nicht zugeordnet)
+    const uncategorized = currentList.filter(i =>
+        !Object.values(categories).flat().includes(i)
+    );
+
+    if (uncategorized.length) {
+        const div = document.createElement("div");
+        const title = document.createElement("h2");
+        title.textContent = "📦 Sonstiges";
+        div.appendChild(title);
+
+        uncategorized.forEach(item => {
+            if (state[item]) {
+                bought.push(item);
+                return;
+            }
+            div.appendChild(createItem(item));
+        });
+
+        container.appendChild(div);
+    }
+
+    // Gekauft
+    if (bought.length) {
+        const div = document.createElement("div");
+        const title = document.createElement("h2");
+        title.textContent = "🛒 Gekauft";
+        div.appendChild(title);
+
+        bought.forEach(item => {
+            const el = createItem(item);
+            el.classList.add("bought");
+            div.appendChild(el);
+        });
+
+        container.appendChild(div);
+    }
+}
+
+function createItem(item) {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.textContent = item;
+
+    div.onclick = () => {
+        state[item] = !state[item];
+        save();
+        render();
+    };
+
+    return div;
+}
+
+function resetAll() {
+    localStorage.clear();
+    state = {};
+    currentList = [];
+    document.getElementById("input").value = "";
+    render();
+}
+
+// Beim Laden wiederherstellen
+render();
+</script>
+
+</body>
+</html>
