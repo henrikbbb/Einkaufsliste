@@ -172,13 +172,30 @@ const categories = {
 let state = JSON.parse(localStorage.getItem("state")) || {};
 let currentList = JSON.parse(localStorage.getItem("currentList")) || [];
 
+function extractMessageText(raw) {
+    return raw
+        .split("\n")
+        .map(line => {
+            line = line.trim();
+
+            if (!line) return null;
+
+            // entfernt "[Datum, Uhrzeit] Name: "
+            const parts = line.split(": ");
+
+            if (parts.length > 1) {
+                return parts.slice(1).join(": "); // falls im Text selbst ":" vorkommt
+            }
+
+            return line;
+        })
+        .filter(line => line && !line.startsWith("*")); // Überschriften raus
+}
+
 function createList() {
     const raw = document.getElementById("input").value;
 
-    currentList = raw
-        .split("\n")
-        .map(i => i.trim())
-        .filter(i => i && !i.startsWith("*"));
+    currentList = extractMessageText(raw);
 
     state = {};
     save();
